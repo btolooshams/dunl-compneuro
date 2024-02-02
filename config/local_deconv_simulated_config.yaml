@@ -1,0 +1,74 @@
+default: &DEFAULT
+  exp_name: None
+  data_path: None # this must be a list of data_path, set to "" if using data_folder as path.
+  test_data_path: None # give it a list of datasets
+  #################################
+  model_distribution: "binomial" # data distrbution gaussian, binomila, poisson
+  share_kernels_among_neurons: True # set true to share kernels among neurons
+  #################################
+  # kernel (dictionary)
+  kernel_normalize: True # True: l2-norm of kernels is set to one after each update
+  kernel_nonneg: False # True: project kernels into non-negative values
+  kernel_nonneg_indicator: None # 0 for +-, 1 for +
+  kernel_num: 2 # number of kernels to learn
+  kernel_length: 16 # number of samples for kernel in time
+  kernel_stride: 1 # default 1, convolution stride
+  kernel_init_smoother: False # flag to init kernels to be smooth
+  kernel_init_smoother_sigma: 0.5 # sigma of the gaussian kernel for kernel_init_smoother
+  kernel_smoother: True # flag to apply smoother to the kernel during training
+  kernel_smoother_penalty_weight: 0.007 # penalty weight to apply for kernel smoother
+  # kernel_initialization: "../data/local-deconv-simulated/kernels_sin_and_bump.pt" # None, or a data path
+  kernel_initialization: None # None, or a data path
+  kernel_initialization_needs_adjustment_of_time_bin_resolution: False,
+  #################################
+  # code (representation)
+  code_nonneg: [1, 1]  # apply sign constraint on the code. 1 for pos, -1 for neg, 2 for twosided
+  code_sparse_regularization: 0.1 # apply sparse (lambda l1-norm) regularization on the code 
+  code_sparse_regularization_decay: 1 # apply decay factor to lambda at every encoder iteration
+  code_q_regularization: True # set True to apply Q-regularization on the norm of the code
+  code_q_regularization_matrix: None # The matrix of relations between the codes (use the path to load)
+  code_q_regularization_matrix_path: "../data/local-deconv-simulated/code_q_regularization_matrix.pt"
+  code_q_regularization_period: 1 # the period to apply Q-regularization in encoder iterations
+  code_q_regularization_scale: 2.5 # scale factor in front of the Q-regularization term
+  code_q_regularization_norm_type: None # Set to the norm number you want the Q-regularization to be applied
+  code_supp: False # True: apply known event indices (supp) into code x
+  code_topk: True # True: keep only top k indices in each kernel code non-zero (this is greedy)
+  code_topk_sparse: 4 # number of top k non-zero entires in each code kernel
+  code_topk_period: 10 # period on encoder iteration to apply topk
+  code_l1loss_bp: True # True: to include l1-norm of the code in the loss during training
+  code_l1loss_bp_penalty_weight: 0.1 # amount of sparse regularization of the code with bp during training
+  #################################
+  est_baseline_activity: False # True: estimate the baseline activity along with the code in the encoder
+  poisson_stability_name: None # type of non-linearity to use on poisson case for encoder stability
+  poisson_peak: 1 # For ELU "poisson_stability_name", this peak must be set to a value    
+  #################################
+  # unrolling parameters
+  unrolling_num: 800 # number of unrolling iterations in the encoder
+  unrolling_mode: "fista" # ista or fista encoder
+  unrolling_alpha: 0.25 # alpha step size in unrolling for known events it was 0.5
+  unrolling_prox: "shrinkage" # type of proximal operator (shrinkage, threshold)
+  unrolling_threshold: None # must set to a value if unrolling_prox is threshold"
+  #################################
+  # training related
+  # default optimizer is ADAM.
+  optimizer_lr: 1e-2 # learning rate for training the model (learning the kernels)
+  optimizer_lr_step: 1000 # number of steps (updates) after which the lr will decay
+  optimizer_lr_decay: 1 # decay factor for learning rate
+  optimizer_adam_eps: 1e-3 # eps parameter of adam optimizer
+  optimizer_adam_weight_decay: 0 # weight_decay parameter for adam optimizer
+  #
+  backward_gradient_decsent: truncated_bprop" # type of backward gradient update (bprop, truncated_bprop)
+  backward_truncated_bprop_itr: 5 # must be set for truncated_bprop
+  #
+  train_num_epochs: None # number of epochs for training
+  train_data_shuffle: True # True: to shuffle dataset at every epoch for training
+  train_batch_size: 128 # batch size for training
+  train_num_workers: 4 # number of workers to load data
+  train_val_split: 0.85 # 1: use all for train. percentage of data used to train, rest to be used for validation.
+  #
+  enable_board: True
+  log_info_epoch_period: 1 # period to push small info into the board
+  log_model_epoch_period: 200 # period to save model
+  log_fig_epoch_period: None # period to push figures into the board
+  tqdm_prints_disable: False # True: to disable prints of epoch training process
+  tqdm_prints_inside_disable: True # True: to disable prints inside of epoch training process
