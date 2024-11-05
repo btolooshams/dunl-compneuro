@@ -1,0 +1,35 @@
+  # This shows the important variables that you wanna change within each config
+  # This shows the important variables that you wanna change within each config
+  # This shows the important variables that you wanna change within each config
+  # This shows the important variables that you wanna change within each config
+default: &DEFAULT
+  data_path: ["../data/datafile_xxx.pt"] # give it a list of datasets
+  #################################
+  model_distribution: "binomial" # for spiking use binomial, for calcium use Gaussian
+  share_kernels_among_neurons: True # set true to share kernels among neurons
+  #################################
+  # kernel (dictionary)
+  # important for kernel
+  kernel_nonneg: False # True: project kernels into non-negative values
+  kernel_nonneg_indicator: [0] # 0 for +-, 1 for +
+  kernel_num: 1 # number of kernels to learn
+  kernel_length: 25 # number of samples for kernel in time
+  kernel_smoother: True # flag to apply smoother to the kernel during training
+  kernel_smoother_penalty_weight: 0.003 # this is easy to tune (set to a a small value) and make kernel_smoother False if you have much data
+  #################################
+  # code (representation)
+  code_nonneg: [1]  # apply sign constraint on the code. 1 for pos, -1 for neg, 2 for twosided
+  code_sparse_regularization: 0.01 # apply sparse (lambda l1-norm) regularization on the code 
+  code_group_neural_firings_regularization: 0.05 # if > 0, then it applies groupping across neurons
+  # if you don't have the event onsets, then code_supp would be off
+  code_supp: False # True: apply known event indices (supp) into code x
+  code_topk: True # True: keep only top k indices in each kernel code non-zero (this is greedy)
+  code_topk_sparse: 18 # number of top k non-zero entires in each code kernel
+  code_topk_period: 10 # period on encoder iteration to apply topk
+  code_l1loss_bp_penalty_weight: 0.01 # suggest to keep this the same as code_sparse_regularization
+  #################################
+  est_baseline_activity: True # if you wanna also est the baseline (have this true)
+  #################################
+  # unrolling parameters
+  unrolling_num: 200 # if you want highly sparse codes increase this. Recommend to be between 100 to 1000.
+  unrolling_alpha: 0.5 # make sure that this is lower than 1 and small that network does not blow up

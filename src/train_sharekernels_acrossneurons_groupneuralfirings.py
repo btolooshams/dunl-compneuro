@@ -33,10 +33,17 @@ def init_params():
         type=str,
         help="config filename",
         # default="./whisker_config.yaml"
+        # default="./whisker_groupneuralfirings_config.yaml"
         # default="./whisker_simulated_config.yaml"
-        default="./dopamine_calcium_saramatias_uchida_config.yaml"
+        #######
+        # default="./dopamine_calcium_saramatias_uchida_config.yaml"
+        # default="./dopamine_calcium_saramatias_uchida_inferbaseline_config.yaml"
+        default="./dopamine_calcium_saramatias_uchida_groupneuralfirings_config.yaml"
+        #######
         # default="./dopamine_spiking_eshel_uchida_config.yaml"
         # default="./dopamine_spiking_eshel_uchida_limited_data_exp_config.yaml"
+        # default="./dopamine_spiking_eshel_uchida_inferbaseline_config.yaml"
+        #######
         # default="./dopamine_spiking_simulated_config.yaml"
     )
     args = parser.parse_args()
@@ -265,16 +272,12 @@ def main():
             for idx, (y_load, x_load, a_load, type_load) in tqdm(
                 enumerate(train_loader), disable=params["tqdm_prints_inside_disable"]
             ):
-                # this is to collapse the neurons into the trial dim (as we are sharing kernel among neurons)
-                # we do this to make sure that all neurons are present in each batch. So one example in batch correpsond to all neurons from one trial
-                y = torch.reshape(
-                    y_load, (int(y_load.shape[0] * y_load.shape[1]), 1, y_load.shape[2])
-                )
-                a = torch.reshape(
-                    a_load, (int(a_load.shape[0] * a_load.shape[1]), 1, a_load.shape[2])
-                )
-                # repeat x for how many neurons are they into the 0 (trial) dim
-                x = torch.repeat_interleave(x_load, a_load.shape[1], dim=0)
+                # we want to group the firing rate of the neurons, so the model will take (b, group, 1, time)
+                y = y_load.unsqueeze(dim=2)
+                a = a_load.unsqueeze(dim=2)
+
+                # give x as is, the mdoel will take care of the repeat to group neurons.
+                x = x_load
 
                 # send data to device (cpu or gpu)
                 y = y.to(device)
@@ -341,7 +344,6 @@ def main():
                 writer.flush()
 
             if params["kernel_smoother"]:
-                print("kernel_smoother loss", loss_kernel_smoother.item())
                 if params["enable_board"]:
                     writer.add_scalar(
                         "loss/kernel_smoother", loss_kernel_smoother.item(), epoch
@@ -351,7 +353,7 @@ def main():
             if params["enable_board"]:
                 net.eval()
                 if val_loader_list:
-                    writer = boardfunc.log_loss(
+                    writer, _ = boardfunc.log_loss(
                         writer,
                         epoch,
                         net,
@@ -359,11 +361,12 @@ def main():
                         criterion,
                         params,
                         "val",
+                        False,
                         device,
                     )
 
                 if test_loader_list:
-                    writer = boardfunc.log_loss(
+                    writer, _ = boardfunc.log_loss(
                         writer,
                         epoch,
                         net,
@@ -371,21 +374,28 @@ def main():
                         criterion,
                         params,
                         "test",
+                        False,
                         device,
                     )
 
         if params["enable_board"] and (epoch + 1) % params["log_fig_epoch_period"] == 0:
             writer = boardfunc.log_kernels(writer, epoch, net)
-            writer = boardfunc.log_data_inputrec(
+            writer = boardfunc.log_data_inputrec_groupneuralfirings(
                 writer, epoch, y, yhat, params["model_distribution"]
             )
             if params["code_supp"]:
-                writer = boardfunc.log_data_code(writer, epoch, xhat, x)
+                writer = boardfunc.log_data_code_groupneuralfirings(
+                    writer, epoch, xhat, x
+                )
             else:
                 if torch.sum(torch.abs(x)) > 0:
-                    writer = boardfunc.log_data_code(writer, epoch, xhat, x)
+                    writer = boardfunc.log_data_code_groupneuralfirings(
+                        writer, epoch, xhat, x
+                    )
                 else:
-                    writer = boardfunc.log_data_code(writer, epoch, xhat)
+                    writer = boardfunc.log_data_code_groupneuralfirings(
+                        writer, epoch, xhat
+                    )
 
         if (epoch + 1) % params["log_model_epoch_period"] == 0:
             torch.save(
