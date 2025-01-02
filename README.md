@@ -14,6 +14,8 @@ Check `config` for detailed parameters of each experiment.
 
 You should provide all detailed information about the model as a yaml file.
 
+See `instrcutions.yaml` for information on important parameters.
+
 ### Data generation
 
 Go to `src/preprocess_script`. Create a script similar to `generate_simulated_data_dopamine_spiking_into_dataformat.py`.
