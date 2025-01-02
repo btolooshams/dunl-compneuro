@@ -1,8 +1,13 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
+
 # Deconvolutional Unrolled Neural Learning (DUNL) for Computational Neuroscience
 
 This repo is in progress.
+
+This code is wrriten for this paper [https://pmc.ncbi.nlm.nih.gov/articles/PMC10802267](https://pmc.ncbi.nlm.nih.gov/articles/PMC10802267/).
+
+Learning locally low-rank temporal representation from neural time series data.
 
 ### PATH
 
