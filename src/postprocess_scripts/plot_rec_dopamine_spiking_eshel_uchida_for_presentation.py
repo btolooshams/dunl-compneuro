@@ -307,7 +307,6 @@ def main():
             y_surprise.shape[-1],
         )
 
-        # exit()
         # plot -------------------------------------------------------#
 
         num_neurons = y_surprise.shape[1]

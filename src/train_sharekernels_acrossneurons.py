@@ -34,9 +34,15 @@ def init_params():
         help="config filename",
         # default="./whisker_config.yaml"
         # default="./whisker_simulated_config.yaml"
+        #######
+        ## calcium
         default="./dopamine_calcium_saramatias_uchida_config.yaml"
-        # default="./dopamine_spiking_eshel_uchida_config.yaml"
-        # default="./dopamine_spiking_eshel_uchida_limited_data_exp_config.yaml"
+        # default="./dopamine_calcium_saramatias_uchida_inferbaseline_config.yaml"
+        #######
+        ## spiking
+        # default="./dopamine_spiking_eshel_uchida_code122_kernel011_config.yaml",
+        # default="./dopamine_spiking_eshel_uchida_code122_kernel011_inferbaseline_config.yaml",
+        #######
         # default="./dopamine_spiking_simulated_config.yaml"
     )
     args = parser.parse_args()
@@ -341,7 +347,6 @@ def main():
                 writer.flush()
 
             if params["kernel_smoother"]:
-                print("kernel_smoother loss", loss_kernel_smoother.item())
                 if params["enable_board"]:
                     writer.add_scalar(
                         "loss/kernel_smoother", loss_kernel_smoother.item(), epoch
@@ -351,7 +356,7 @@ def main():
             if params["enable_board"]:
                 net.eval()
                 if val_loader_list:
-                    writer = boardfunc.log_loss(
+                    writer, _ = boardfunc.log_loss(
                         writer,
                         epoch,
                         net,
@@ -359,11 +364,12 @@ def main():
                         criterion,
                         params,
                         "val",
-                        device,
+                        True,
+                        device=device,
                     )
 
                 if test_loader_list:
-                    writer = boardfunc.log_loss(
+                    writer, _ = boardfunc.log_loss(
                         writer,
                         epoch,
                         net,
@@ -371,7 +377,8 @@ def main():
                         criterion,
                         params,
                         "test",
-                        device,
+                        True,
+                        device=device,
                     )
 
         if params["enable_board"] and (epoch + 1) % params["log_fig_epoch_period"] == 0:

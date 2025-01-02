@@ -20,6 +20,13 @@ class DUNL1D(torch.nn.Module):
         self.kernel_length = params["kernel_length"]  # the length of kernel
         self.unrolling_mode = params["unrolling_mode"]  # ista or fista
 
+        if "code_group_neural_firings_regularization" in params:
+            self.code_group_neural_firings_regularization = params[
+                "code_group_neural_firings_regularization"
+            ]
+        else:
+            self.code_group_neural_firings_regularization = 0
+
         # related to sparse regularization for code
         code_sparse_regularization = params[
             "code_sparse_regularization"
@@ -228,6 +235,31 @@ class DUNL1D(torch.nn.Module):
                 )
         return x
 
+    def group_nonlin(self, x, eps=1e-10):
+        # this assumes that x is (b, g, num_kernels, T), where you want the x to be grouped (fire together, wire together) across g dim.
+        """group proximal operator"""
+
+        if self.code_nonneg:
+            x = self.relu(
+                1
+                - (
+                    self.unrolling_alpha
+                    * self.code_group_neural_firings_regularization
+                    / (x.norm(dim=1, keepdim=True) + eps)
+                )
+            ) * self.relu(x)
+        else:
+            x = self.relu(
+                1
+                - (
+                    self.unrolling_alpha
+                    * self.code_group_neural_firings_regularization
+                    / (x.norm(dim=1, keepdim=True) + eps)
+                )
+            )
+
+        return x
+
     def hardthresholding_nonlin(self, x, code_supp=None):
         """hard-thresholding proximal operator"""
         if code_supp is None:
@@ -257,6 +289,26 @@ class DUNL1D(torch.nn.Module):
         x = mask.scatter(2, indices, values) * torch.sign(x)
         # topk function (argmax) is not differentiable, so break the gradient for bp
         x = x.clone().detach().requires_grad_(False)
+        return x
+
+    def topk_nonlin_group(self, x, r):
+        """set all but top k code entries to zero, use the norm across group of neurons"""
+        # x is assumed to have dim (b, g, num_kernels, T)
+        code_topk = int(
+            self.code_topk_sparse
+            * ((self.unrolling_num - r + 1) / self.unrolling_num + 1)
+        )
+
+        x_norm_repeat = torch.repeat_interleave(
+            x.norm(dim=1, keepdim=True), x.shape[1], dim=1
+        )
+        values, indices = torch.topk(x_norm_repeat, code_topk, dim=-1)
+        values[values > 0] = 1
+        mask = x * 0
+        x = mask.scatter(3, indices, values) * x
+        # topk function (argmax) is not differentiable, so break the gradient for bp
+        x = x.clone().detach().requires_grad_(False)
+
         return x
 
     def get_Qx(self, x):
@@ -304,6 +356,16 @@ class DUNL1D(torch.nn.Module):
 
         """
 
+        # if code_group_neural_firings_regularization, y is (b, neurons, 1, time)
+        # else, y is (b, 1, time)
+        if self.code_group_neural_firings_regularization:
+            b, neurons, ch, time = y.shape
+            y = y.view(b * neurons, ch, time)
+            a = a.view(b * neurons, ch, 1)
+            if code_supp is not None:
+                code_supp = torch.repeat_interleave(code_supp, neurons, dim=0)
+                code_supp = torch.squeeze(code_supp, dim=1)
+
         num_batches = y.shape[0]
         device = y.device
 
@@ -341,6 +403,13 @@ class DUNL1D(torch.nn.Module):
             elif self.unrolling_prox == "threshold":
                 x = self.hardthresholding_nonlin(x, code_supp)
 
+            if self.code_group_neural_firings_regularization:
+                # reshape x into (b, group, time)
+                # b, neurons, ch, time = y.shape
+                x = x.view(b, neurons, self.kernel_num, D_enc)
+                x = self.group_nonlin(x)
+                x = x.view(b * neurons, self.kernel_num, D_enc)
+
             if (
                 self.code_q_regularization
                 and (r + 1) % self.code_q_regularization_period == 0
@@ -350,7 +419,12 @@ class DUNL1D(torch.nn.Module):
                 x = self.shrinkage_nonlin(x, q_reg, code_supp)
 
             if self.code_topk and (r + 1) % self.code_topk_period == 0:
-                x = self.topk_nonlin(x, r)
+                if self.code_group_neural_firings_regularization:
+                    x = x.view(b, neurons, self.kernel_num, D_enc)
+                    x = self.topk_nonlin_group(x, r)
+                    x = x.view(b * neurons, self.kernel_num, D_enc)
+                else:
+                    x = self.topk_nonlin(x, r)
 
             if (
                 self.backward_gradient_decsent == "truncated_bprop"
@@ -359,7 +433,17 @@ class DUNL1D(torch.nn.Module):
                 x = x.clone().detach().requires_grad_(False)
 
         if self.code_topk:
-            x = self.topk_nonlin(x, self.unrolling_num)
+            if self.code_group_neural_firings_regularization:
+                x = x.view(b, neurons, self.kernel_num, D_enc)
+                x = self.topk_nonlin_group(x, self.unrolling_num)
+                x = x.view(b * neurons, self.kernel_num, D_enc)
+            else:
+                x = self.topk_nonlin(x, self.unrolling_num)
+
+        if self.code_group_neural_firings_regularization:
+            # bring x_new, and a back to shape
+            x = x.view(b, neurons, self.kernel_num, D_enc)
+            a = a.view(b, neurons, ch, 1)
 
         return x, a
 
@@ -370,6 +454,16 @@ class DUNL1D(torch.nn.Module):
         return (code, baseline activity)
 
         """
+
+        # if code_group_neural_firings_regularization, y is (b, neurons, 1, time)
+        # else, y is (b, 1, time)
+        if self.code_group_neural_firings_regularization:
+            b, neurons, ch, time = y.shape
+            y = y.view(b * neurons, ch, time)
+            a = a.view(b * neurons, ch, 1)
+            if code_supp is not None:
+                code_supp = torch.repeat_interleave(code_supp, neurons, dim=0)
+                code_supp = torch.squeeze(code_supp, dim=1)
 
         num_batches = y.shape[0]
         device = y.device
@@ -413,6 +507,13 @@ class DUNL1D(torch.nn.Module):
             elif self.unrolling_prox == "threshold":
                 x_new = self.hardthresholding_nonlin(x_new, code_supp)
 
+            if self.code_group_neural_firings_regularization:
+                # reshape x into (b, group, time)
+                # b, neurons, ch, time = y.shape
+                x_new = x_new.view(b, neurons, self.kernel_num, D_enc)
+                x_new = self.group_nonlin(x_new)
+                x_new = x_new.view(b * neurons, self.kernel_num, D_enc)
+
             if (
                 self.code_q_regularization
                 and (r + 1) % self.code_q_regularization_period == 0
@@ -422,7 +523,12 @@ class DUNL1D(torch.nn.Module):
                 x_new = self.shrinkage_nonlin(x_new, q_reg, code_supp)
 
             if self.code_topk and (r + 1) % self.code_topk_period == 0:
-                x_new = self.topk_nonlin(x_new, r)
+                if self.code_group_neural_firings_regularization:
+                    x_new = x_new.view(b, neurons, self.kernel_num, D_enc)
+                    x_new = self.topk_nonlin_group(x_new, r)
+                    x_new = x_new.view(b * neurons, self.kernel_num, D_enc)
+                else:
+                    x_new = self.topk_nonlin(x_new, r)
 
             t_new = (1.0 + torch.sqrt(1.0 + 4.0 * t_old.pow(2))) / 2.0
             x_tmp = x_new + (t_old - 1.0) / t_new * (x_new - x_old)
@@ -439,17 +545,41 @@ class DUNL1D(torch.nn.Module):
                 x_old = x_old.clone().detach().requires_grad_(False)
 
         if self.code_topk:
-            x_new = self.topk_nonlin(x_new, self.unrolling_num)
+            if self.code_group_neural_firings_regularization:
+                x_new = x_new.view(b, neurons, self.kernel_num, D_enc)
+                x_new = self.topk_nonlin_group(x_new, self.unrolling_num)
+                x_new = x_new.view(b * neurons, self.kernel_num, D_enc)
+            else:
+                x_new = self.topk_nonlin(x_new, self.unrolling_num)
+
+        if self.code_group_neural_firings_regularization:
+            # bring x_new, and a back to shape
+            x_new = x_new.view(b, neurons, self.kernel_num, D_enc)
+            a = a.view(b, neurons, ch, 1)
 
         return x_new, a
 
-    def encode_ista_est_baseline_activity(self, y, a=0, code_supp=None):
+    def encode_ista_est_baseline_activity(
+        self, y, a=0, code_supp=None, silent_bg_value=1e-3
+    ):
         """
         unrolled encoder using ista and estimate baseline activity
 
         return (code, estimated baseline activity)
 
         """
+
+        a_min = torch.log(torch.tensor(silent_bg_value / (1 - silent_bg_value)))
+
+        # if code_group_neural_firings_regularization, y is (b, neurons, 1, time)
+        # else, y is (b, 1, time)
+        if self.code_group_neural_firings_regularization:
+            b, neurons, ch, time = y.shape
+            y = y.view(b * neurons, ch, time)
+            a = a.view(b * neurons, ch, 1)
+            if code_supp is not None:
+                code_supp = torch.repeat_interleave(code_supp, neurons, dim=0)
+                code_supp = torch.squeeze(code_supp, dim=1)
 
         num_batches = y.shape[0]
         device = y.device
@@ -480,7 +610,22 @@ class DUNL1D(torch.nn.Module):
                 if self.poisson_stability_name is not None:
                     res = self.poisson_stability(res)
 
-            a_est = a_est + torch.mean(res, dim=-1, keepdims=True)
+            if code_supp is not None:
+                _, code_supp_sorted_indices = code_supp.sort(dim=-1, descending=True)
+                a_end_onset = code_supp_sorted_indices[:, :, 0]
+                a_end_onset[a_end_onset == 0] = 1e10
+                a_end_onset = torch.min(a_end_onset, dim=-1)[0]
+                a_end_onset = torch.min(
+                    a_end_onset
+                ).item()  # decided to have min onset across the batch
+                a_est = a_est + torch.mean(
+                    res[:, :, :a_end_onset], dim=-1, keepdims=True
+                )
+            else:
+                a_est = a_est + torch.mean(res, dim=-1, keepdims=True)
+
+            a_est_new = torch.maximum(a_est_new, a_min)
+
             x = x + self.unrolling_alpha * torch.nn.functional.conv1d(
                 res, self.get_param("H"), stride=self.kernel_stride
             )
@@ -491,6 +636,13 @@ class DUNL1D(torch.nn.Module):
             elif self.unrolling_prox == "threshold":
                 x = self.hardthresholding_nonlin(x, code_supp)
 
+            if self.code_group_neural_firings_regularization:
+                # reshape x into (b, group, time)
+                # b, neurons, ch, time = y.shape
+                x = x.view(b, neurons, self.kernel_num, D_enc)
+                x = self.group_nonlin(x)
+                x = x.view(b * neurons, self.kernel_num, D_enc)
+
             if (
                 self.code_q_regularization
                 and (r + 1) % self.code_q_regularization_period == 0
@@ -500,7 +652,12 @@ class DUNL1D(torch.nn.Module):
                 x = self.shrinkage_nonlin(x, q_reg, code_supp)
 
             if self.code_topk and (r + 1) % self.code_topk_period == 0:
-                x = self.topk_nonlin(x, r)
+                if self.code_group_neural_firings_regularization:
+                    x = x.view(b, neurons, self.kernel_num, D_enc)
+                    x = self.topk_nonlin_group(x, r)
+                    x = x.view(b * neurons, self.kernel_num, D_enc)
+                else:
+                    x = self.topk_nonlin(x, r)
 
             if (
                 self.backward_gradient_decsent == "truncated_bprop"
@@ -509,17 +666,41 @@ class DUNL1D(torch.nn.Module):
                 x = x.clone().detach().requires_grad_(False)
 
         if self.code_topk:
-            x = self.topk_nonlin(x, self.unrolling_num)
+            if self.code_group_neural_firings_regularization:
+                x = x.view(b, neurons, self.kernel_num, D_enc)
+                x = self.topk_nonlin_group(x, self.unrolling_num)
+                x = x.view(b * neurons, self.kernel_num, D_enc)
+            else:
+                x = self.topk_nonlin(x, self.unrolling_num)
+
+        if self.code_group_neural_firings_regularization:
+            # bring x_new, and a back to shape
+            x = x.view(b, neurons, self.kernel_num, D_enc)
+            a_est = a_est.view(b, neurons, ch, 1)
 
         return x, a_est
 
-    def encode_fista_est_baseline_activity(self, y, a=0, code_supp=None):
+    def encode_fista_est_baseline_activity(
+        self, y, a=0, code_supp=None, silent_bg_value=1e-3
+    ):
         """
         unrolled encoder using fista and estimate baseline activity
 
         return (code, estimated baseline activity)
 
         """
+
+        a_min = torch.log(torch.tensor(silent_bg_value / (1 - silent_bg_value)))
+
+        # if code_group_neural_firings_regularization, y is (b, neurons, 1, time)
+        # else, y is (b, 1, time)
+        if self.code_group_neural_firings_regularization:
+            b, neurons, ch, time = y.shape
+            y = y.view(b * neurons, ch, time)
+            a = a.view(b * neurons, ch, 1)
+            if code_supp is not None:
+                code_supp = torch.repeat_interleave(code_supp, neurons, dim=0)
+                code_supp = torch.squeeze(code_supp, dim=1)
 
         num_batches = y.shape[0]
         device = y.device
@@ -555,7 +736,21 @@ class DUNL1D(torch.nn.Module):
                 if self.poisson_stability_name is not None:
                     res = self.poisson_stability(res)
 
-            a_est_new = a_est_tmp + torch.mean(res, dim=-1, keepdims=True)
+            if code_supp is not None:
+                _, code_supp_sorted_indices = code_supp.sort(dim=-1, descending=True)
+                a_end_onset = code_supp_sorted_indices[:, :, 0]
+                a_end_onset[a_end_onset == 0] = 1e10
+                a_end_onset = torch.min(a_end_onset, dim=-1)[0]
+                a_end_onset = torch.min(
+                    a_end_onset
+                ).item()  # decided to have min onset across the batch
+                a_est_new = a_est_tmp + torch.mean(
+                    res[:, :, :a_end_onset], dim=-1, keepdims=True
+                )
+            else:
+                a_est_new = a_est_tmp + torch.mean(res, dim=-1, keepdims=True)
+
+            a_est_new = torch.maximum(a_est_new, a_min)
 
             x_new = x_tmp + self.unrolling_alpha * torch.nn.functional.conv1d(
                 res, self.get_param("H"), stride=self.kernel_stride
@@ -569,6 +764,13 @@ class DUNL1D(torch.nn.Module):
             elif self.unrolling_prox == "threshold":
                 x_new = self.hardthresholding_nonlin(x_new, code_supp)
 
+            if self.code_group_neural_firings_regularization:
+                # reshape x into (b, group, time)
+                # b, neurons, ch, time = y.shape
+                x_new = x_new.view(b, neurons, self.kernel_num, D_enc)
+                x_new = self.group_nonlin(x_new)
+                x_new = x_new.view(b * neurons, self.kernel_num, D_enc)
+
             if (
                 self.code_q_regularization
                 and (r + 1) % self.code_q_regularization_period == 0
@@ -578,7 +780,12 @@ class DUNL1D(torch.nn.Module):
                 x_new = self.shrinkage_nonlin(x_new, q_reg, code_supp)
 
             if self.code_topk and (r + 1) % self.code_topk_period == 0:
-                x_new = self.topk_nonlin(x_new, r)
+                if self.code_group_neural_firings_regularization:
+                    x_new = x_new.view(b, neurons, self.kernel_num, D_enc)
+                    x_new = self.topk_nonlin_group(x_new, r)
+                    x_new = x_new.view(b * neurons, self.kernel_num, D_enc)
+                else:
+                    x_new = self.topk_nonlin(x_new, r)
 
             t_new = (1.0 + torch.sqrt(1.0 + 4.0 * t_old.pow(2))) / 2.0
             a_est_tmp = a_est_new + (t_old - 1) / t_new * (a_est_new - a_est_old)
@@ -597,7 +804,17 @@ class DUNL1D(torch.nn.Module):
                 x_old = x_old.clone().detach().requires_grad_(False)
 
         if self.code_topk:
-            x_new = self.topk_nonlin(x_new, self.unrolling_num)
+            if self.code_group_neural_firings_regularization:
+                x_new = x_new.view(b, neurons, self.kernel_num, D_enc)
+                x_new = self.topk_nonlin_group(x_new, self.unrolling_num)
+                x_new = x_new.view(b * neurons, self.kernel_num, D_enc)
+            else:
+                x_new = self.topk_nonlin(x_new, self.unrolling_num)
+
+        if self.code_group_neural_firings_regularization:
+            # bring x_new, and a back to shape
+            x_new = x_new.view(b, neurons, self.kernel_num, D_enc)
+            a_est_new = a_est_new.view(b, neurons, ch, 1)
 
         return x_new, a_est_new
 
@@ -607,7 +824,7 @@ class DUNL1D(torch.nn.Module):
             if self.est_baseline_activity:
                 x, a_est = self.encode_ista_est_baseline_activity(
                     y,
-                    a,
+                    0,
                     code_supp,
                 )
             else:
@@ -616,16 +833,20 @@ class DUNL1D(torch.nn.Module):
             if self.est_baseline_activity:
                 x, a_est = self.encode_fista_est_baseline_activity(
                     y,
-                    a,
+                    0,
                     code_supp,
                 )
             else:
                 x, a_est = self.encode_fista(y, a, code_supp)
-
         return x, a_est
 
     def decode(self, x, a=0):
         """shallow decoder using the kernels"""
+        if self.code_group_neural_firings_regularization:
+            b, neurons, ch, time = x.shape
+            x = x.view(b * neurons, ch, time)
+            a = a.view(b * neurons, 1, 1)
+
         yhat = (
             torch.nn.functional.conv_transpose1d(
                 x, self.get_param("H"), stride=self.kernel_stride
@@ -633,9 +854,12 @@ class DUNL1D(torch.nn.Module):
             + a
         )
 
+        if self.code_group_neural_firings_regularization:
+            yhat = yhat.view(b, neurons, yhat.shape[-2], yhat.shape[-1])
+
         return yhat
 
-    def forward(self, y, a=0, code_supp=None):
+    def forward(self, y, a=0, code_supp=None, a_end_onset=None):
         """network forward mapping"""
         # encoder
         x, a_est = self.encode(y, a, code_supp)

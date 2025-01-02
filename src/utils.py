@@ -66,15 +66,6 @@ def normalize_for_give_sorted_curve_x(x):
     return x_sameminmax
 
 
-def give_sorted_curve_x_old(x):
-    a1 = torch.mean(x[:2], dim=0)
-    a2 = torch.mean(x[2:-1], dim=0)
-    a3 = torch.mean(x[-1:], dim=0)
-    curveture = (a3 - a2) / (a2 - a1)
-    sort_ids = np.flip(np.argsort(curveture.clone().detach().cpu().numpy()))
-    return x, sort_ids
-
-
 def give_sorted_curve_x(x):
     slope = list()
     for i in range(x.shape[-1]):
@@ -122,10 +113,13 @@ def get_smooth_kernel(t, tau=40):
 
 def smooth_raster(raster, tau=40):
     # smoothing kernel
+    num_samples = int((2.5 * tau) + 1)
+    if num_samples % 2 == 0:
+        num_samples += 1
     t_kernel = torch.linspace(
         0,
         2.5 * tau,
-        int((2.5 * tau) + 1),
+        num_samples,
     )
     smooth_kernel = get_smooth_kernel(t_kernel, tau)
     smooth_kernel /= torch.sum(smooth_kernel)
@@ -289,3 +283,15 @@ def compute_dictionary_error_with_cross_correlation(h, h_est):
         err.append(np.sqrt(np.maximum(1 - corr**2, 0.0)))
 
     return err
+
+
+def compute_r2_score(spikes, rate_hat, eps=1e-10):
+    # compute r2 score
+    spikes = spikes.flatten()
+    rate_hat = rate_hat.flatten()
+    ss_res = np.mean((spikes - rate_hat) ** 2)
+    ss_tot = np.var(spikes)
+
+    r2_fit = 1 - (ss_res / (ss_tot + eps))
+
+    return r2_fit

@@ -1,0 +1,54 @@
+default: &DEFAULT
+  exp_name: "whisker_glm_05msbinres"
+  data_path: ["../data/whisker/whisker_train_5msbinres_general_format_processed_kernellength25_kernelnum1_trainready.pt"] # give it a list of datasets
+  data_folder: None # this will look for data in format *trainready.pt
+
+  test_data_path: ["../data/whisker/whisker_test_5msbinres_general_format_processed_kernellength25_kernelnum1_trainready.pt"] # give it a list of datasets
+  # data_path: ["../data/whisker/whisker_train_10msbinres_general_format_processed_kernellength12_kernelnum1_trainready.pt"] # give it a list of datasets
+  # test_data_path: ["../data/whisker/whisker_test_10msbinres_general_format_processed_kernellength12_kernelnum1_trainready.pt"] # give it a list of datasets
+  #################################
+  model_distribution: "binomial" # data distrbution gaussian, binomila, poisson
+  share_kernels_among_neurons: True # set true to share kernels among neurons
+  #################################
+  # kernel (dictionary)
+  kernel_normalize: True # True: l2-norm of kernels is set to one after each update
+  kernel_nonneg: False # True: project kernels into non-negative values
+  kernel_nonneg_indicator: [0] # 0 for +-, 1 for +
+  kernel_num: 1 # number of kernels to learn
+  kernel_length: 25 # number of samples for kernel in time
+  kernel_stride: 1 # default 1, convolution stride
+  kernel_init_smoother: False # flag to init kernels to be smooth
+  kernel_init_smoother_sigma: 0 # sigma of the gaussian kernel for kernel_init_smoother
+  kernel_smoother: False # flag to apply smoother to the kernel during training
+  kernel_smoother_penalty_weight: 0 # penalty weight to apply for kernel smoother
+  kernel_initialization: "../data/whisker/kernel_init_25.pt" # None, or a data path
+  kernel_initialization_needs_adjustment_of_time_bin_resolution: False
+  #################################
+  # code (representation)
+  code_nonneg: [1]  # apply sign constraint on the code. 1 for pos, -1 for neg, 2 for twosided
+  code_sparse_regularization: 0 # apply sparse (lambda l1-norm) regularization on the code 
+  code_sparse_regularization_decay: 1 # apply decay factor to lambda at every encoder iteration
+  code_group_neural_firings_regularization: 0 # if > 0, then it applies groupping across neurons
+  code_q_regularization: False # set True to apply Q-regularization on the norm of the code
+  code_q_regularization_matrix: None # The matrix of relations between the codes (if flag is True, use the path to load)
+  code_q_regularization_matrix_path: None
+  code_q_regularization_period: 1 # the period to apply Q-regularization in encoder iterations
+  code_q_regularization_scale: 5 # scale factor in front of the Q-regularization term
+  code_q_regularization_norm_type: 2 # Set to the norm number you want the Q-regularization to be applied
+  code_supp: True # True: apply known event indices (supp) into code x
+  code_topk: False # True: keep only top k indices in each kernel code non-zero (this is greedy)
+  code_topk_sparse: 16 # number of top k non-zero entires in each code kernel
+  code_topk_period: 10 # period on encoder iteration to apply topk
+  code_l1loss_bp: True # True: to include l1-norm of the code in the loss during training
+  code_l1loss_bp_penalty_weight: 0 # amount of sparse regularization of the code with bp during training
+  #################################
+  est_baseline_activity: False # True: estimate the baseline activity along with the code in the encoder
+  poisson_stability_name: None # type of non-linearity to use on poisson case for encoder stability
+  poisson_peak: 1 # For ELU "poisson_stability_name", this peak must be set to a value    
+  #################################
+  # unrolling parameters
+  unrolling_num: 2000 # number of unrolling iterations in the encoder
+  unrolling_mode: "fista" # ista or fista encoder
+  unrolling_alpha: 1.0 # alpha step size in unrolling
+  unrolling_prox: "shrinkage" # type of proximal operator (shrinkage, threshold)
+  unrolling_threshold: None # must set to a value if unrolling_prox is threshold"
