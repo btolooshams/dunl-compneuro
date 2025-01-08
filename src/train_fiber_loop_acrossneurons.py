@@ -336,8 +336,24 @@ def main(params, random_date):
 
 
 if __name__ == "__main__":
-    
-    neuron_index_list = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14] # define the list here
+
+    neuron_index_list = [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+    ]  # define the list here
 
     random_date = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
 
@@ -365,5 +381,5 @@ if __name__ == "__main__":
     for neuron_index in neuron_index_list:
         print("neuron_index", neuron_index)
         params["neuron_index"] = neuron_index
-        
+
         main(params, random_date)

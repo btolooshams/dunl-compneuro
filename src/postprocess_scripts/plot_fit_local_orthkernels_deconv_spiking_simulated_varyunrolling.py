@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020 Bahareh Tolooshams
+Copyright (c) 2025 Bahareh Tolooshams
 
 plot rec data kernel
 
@@ -221,7 +221,6 @@ def main():
             np.save(f"{res_path}/r2_score.npy", r2_score)
         else:
             r2_score = np.load(f"{res_path}/r2_score.npy")
-
 
         r2_score_dict[f"unrolling{num_unrolled}"].append(r2_score.item())
         unrolling_dict[f"unrolling{num_unrolled}"].append(num_unrolled)

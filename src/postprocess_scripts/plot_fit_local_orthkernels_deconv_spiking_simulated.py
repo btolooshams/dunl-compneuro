@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020 Bahareh Tolooshams
+Copyright (c) 2025 Bahareh Tolooshams
 
 plot rec data kernel
 
@@ -303,7 +303,6 @@ def main():
         )
 
         kernels_dict[f"kernel{num_kernels}"][f"trials{num_trials}"].append(kernels)
-
 
     ################################
     num_kernels_list_global = list()

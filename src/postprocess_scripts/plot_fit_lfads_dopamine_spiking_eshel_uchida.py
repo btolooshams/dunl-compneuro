@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020 Bahareh Tolooshams
+Copyright (c) 2025 Bahareh Tolooshams
 
 plot pca/nmf data
 
@@ -155,7 +155,6 @@ def main():
         os.makedirs(out_path)
 
     avg_factors = np.mean(factors, axis=0)
-
 
     print(spike_counts.shape)
     print(neurons.shape)

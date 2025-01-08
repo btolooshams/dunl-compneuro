@@ -14,8 +14,6 @@ import pickle
 import argparse
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from sklearn.decomposition import PCA, NMF
-from sklearn.preprocessing import StandardScaler
 
 
 def init_params():

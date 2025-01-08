@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020 Bahareh Tolooshams
+Copyright (c) 2025 Bahareh Tolooshams
 
 generated simulated data similar to dopamine spiking
 
@@ -9,11 +9,8 @@ generated simulated data similar to dopamine spiking
 import torch
 import torch.nn.functional as F
 import numpy as np
-import scipy.io as sio
 import os
 import argparse
-import matplotlib as mpl
-import matplotlib.pyplot as plt
 
 
 def init_params():
@@ -219,7 +216,6 @@ def main(params):
         # get Hx
         Hx_org = F.conv_transpose1d(code[:, neuron_ctr], kernels_org_resolution)
         rate_neuron = torch.sigmoid(Hx_org + baseline_across_neurons[neuron_ctr])
-
 
         raster_neuron = torch.bernoulli(rate_neuron)
 

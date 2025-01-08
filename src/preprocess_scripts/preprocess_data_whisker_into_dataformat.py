@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020 Bahareh Tolooshams
+Copyright (c) 2025 Bahareh Tolooshams
 
 preprocess whisker data
 
@@ -84,6 +84,7 @@ def init_params():
     params = vars(args)
 
     return params
+
 
 def main():
     # init parameters -------------------------------------------------------#

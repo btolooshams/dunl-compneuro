@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020 Bahareh Tolooshams
+Copyright (c) 2025 Bahareh Tolooshams
 
 plot recompose data
 
@@ -185,7 +185,6 @@ def main():
 
         code_surprise = np.concatenate(code_surprise, axis=1)
         code_expected = np.concatenate(code_expected, axis=1)
-
 
         y_expected = np.concatenate(y_expected, axis=1)
         y_surprise = np.concatenate(y_surprise, axis=1)

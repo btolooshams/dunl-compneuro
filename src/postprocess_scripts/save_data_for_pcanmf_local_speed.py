@@ -1,7 +1,7 @@
 """
-Copyright (c) 2020 Bahareh Tolooshams
+Copyright (c) 2025 Bahareh Tolooshams
 
-train share kernel across neurons
+save data pca nmf
 
 :author: Bahareh Tolooshams
 """
@@ -10,14 +10,7 @@ import numpy as np
 import torch
 import configmypy
 import os
-import json
-import pickle
-import tensorboardX
-from datetime import datetime
-from tqdm import tqdm
 import argparse
-import matplotlib.pyplot as plt
-import time
 
 import sys
 
@@ -91,7 +84,7 @@ def main(params):
         yi = y[i]
 
         for kernel_ctr in range(num_kernels):
-            onset = np.where(xi[kernel_ctr] > 0)[-1]  
+            onset = np.where(xi[kernel_ctr] > 0)[-1]
             for on in onset:
                 y_curr = yi[:, on : on + params["window_dur"]]
                 yavg.append(y_curr)
@@ -107,6 +100,7 @@ def main(params):
         ),
         yavg,
     )
+
 
 if __name__ == "__main__":
     # init parameters -------------------------------------------------------#

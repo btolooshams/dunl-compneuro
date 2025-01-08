@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020 Bahareh Tolooshams
+Copyright (c) 2025 Bahareh Tolooshams
 
 plot rec data kernel
 
@@ -26,10 +26,7 @@ def init_params():
     parser = argparse.ArgumentParser(description=__doc__)
 
     parser.add_argument(
-        "--res-path",
-        type=str,
-        help="res path",
-        default="../results/seqnmf"
+        "--res-path", type=str, help="res path", default="../results/seqnmf"
     )
     parser.add_argument(
         "--color-list",
@@ -77,14 +74,14 @@ def main():
     kernels = np.nan_to_num(kernels)
 
     # take parameters from the result path
-    dunl_path = "../results/2kernelfornmf_30trials_3kernel_num_20unrolling_2024_08_22_20_26_11"
-    params = pickle.load(
-        open(os.path.join(dunl_path, "params.pickle"), "rb")
+    dunl_path = (
+        "../results/2kernelfornmf_30trials_3kernel_num_20unrolling_2024_08_22_20_26_11"
     )
+    params = pickle.load(open(os.path.join(dunl_path, "params.pickle"), "rb"))
     params["time_bin_resolution"] = 5
     for key in params_init.keys():
         params[key] = params_init[key]
-    
+
     # model
     model_path = os.path.join(
         dunl_path,
@@ -96,25 +93,13 @@ def main():
     net.eval()
     kernels_dunl = net.get_param("H").clone().detach()
     kernels_dunl = np.squeeze(kernels_dunl.cpu().numpy())
-    kernels_dunl = kernels_dunl[[2,1]]
+    kernels_dunl = kernels_dunl[[2, 1]]
 
     print(kernels_true.shape, kernels.shape, kernels_dunl.shape)
 
-    plot_kernel_one_plot(
-        kernels,
-        kernels_true,
-        params,
-        res_path,
-        name="seqnmf"
-    )
+    plot_kernel_one_plot(kernels, kernels_true, params, res_path, name="seqnmf")
 
-    plot_kernel_one_plot(
-        kernels_dunl,
-        kernels_true,
-        params,
-        res_path,
-        name="dunl"
-    )
+    plot_kernel_one_plot(kernels_dunl, kernels_true, params, res_path, name="dunl")
 
     print(X.shape, H.shape)
 
@@ -123,8 +108,9 @@ def main():
 
     plot_data_and_code(x_one_trial, code_one_trial, params, res_path)
 
+
 def plot_data_and_code(
-    x, 
+    x,
     code,
     params,
     out_path,
@@ -158,18 +144,18 @@ def plot_data_and_code(
         ax.spines["right"].set_visible(False)
         ax.spines["top"].set_visible(False)
 
-    plt.subplot(2,1,1)
+    plt.subplot(2, 1, 1)
     plt.plot(
-        np.linspace(0, x.shape[0]-1, x.shape[0]) * 5,
+        np.linspace(0, x.shape[0] - 1, x.shape[0]) * 5,
         x,
         lw=0.7,
         color="black",
         label="data",
     )
     plt.ylabel("Average data across neurons")
-    plt.subplot(2,1,2)
+    plt.subplot(2, 1, 2)
     plt.plot(
-        np.linspace(0, code.shape[0]-1, code.shape[0]) * 5,
+        np.linspace(0, code.shape[0] - 1, code.shape[0]) * 5,
         code,
         lw=1,
         color="blue",
@@ -193,9 +179,12 @@ def plot_data_and_code(
     plt.close()
 
 
-
 def plot_kernel_one_plot(
-    kernels, kernels_true, params, out_path, name="",
+    kernels,
+    kernels_true,
+    params,
+    out_path,
+    name="",
 ):
     axes_fontsize = 10
     legend_fontsize = 8
@@ -261,16 +250,12 @@ def plot_kernel_one_plot(
 
     fig.tight_layout(pad=0.8, w_pad=0.7, h_pad=0.5)
     plt.savefig(
-        os.path.join(
-            out_path, f"kernels_{name}.png"
-        ),
+        os.path.join(out_path, f"kernels_{name}.png"),
         bbox_inches="tight",
         pad_inches=0.02,
     )
     plt.savefig(
-        os.path.join(
-            out_path, f"kernels_{name}.svg"
-        ),
+        os.path.join(out_path, f"kernels_{name}.svg"),
         bbox_inches="tight",
         pad_inches=0.02,
     )

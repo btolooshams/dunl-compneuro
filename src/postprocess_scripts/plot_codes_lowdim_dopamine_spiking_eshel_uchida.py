@@ -1,7 +1,7 @@
 """
-Copyright (c) 2020 Bahareh Tolooshams
+Copyright (c) 2025 Bahareh Tolooshams
 
-plot code data
+plot code lowdim dopamine
 
 :author: Bahareh Tolooshams
 """
@@ -257,6 +257,7 @@ def main():
     fig.tight_layout(pad=0.8, w_pad=0.7, h_pad=0.5)
     plt.show()
     plt.close()
+
 
 def plot_code_vs_rew_single_neuron(
     fig,

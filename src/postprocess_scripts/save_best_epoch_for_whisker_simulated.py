@@ -1,7 +1,7 @@
 """
-Copyright (c) 2020 Bahareh Tolooshams
+Copyright (c) 2025 Bahareh Tolooshams
 
-plot whisker simulation - model characterization
+save whisker simulation - model characterization
 
 :author: Bahareh Tolooshams
 """
@@ -13,7 +13,6 @@ import os
 import pickle
 from tqdm import tqdm
 import argparse
-import matplotlib.pyplot as plt
 
 import sys
 

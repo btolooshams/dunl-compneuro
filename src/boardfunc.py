@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020 Bahareh Tolooshams
+Copyright (c) 2025 Bahareh Tolooshams
 
 functions to send info to borad during training
 
@@ -9,7 +9,6 @@ import io
 import numpy as np
 import torch
 from tqdm import tqdm
-import matplotlib.gridspec as gridspec
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 

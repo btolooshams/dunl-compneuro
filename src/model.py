@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020 Bahareh Tolooshams
+Copyright (c) 2025 Bahareh Tolooshams
 
 dunl model
 
@@ -8,7 +8,6 @@ dunl model
 
 import torch
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 class DUNL1D(torch.nn.Module):
@@ -173,12 +172,6 @@ class DUNL1D(torch.nn.Module):
                     )
                     H = torch.nn.functional.conv1d(H, gaussian_smoother, padding="same")
                     H = torch.nn.functional.normalize(H, p=2, dim=-1)
-
-            # import matplotlib.pyplot as plt
-            # plt.figure()
-            # plt.plot(H[:,0,:].T)
-            # plt.show()
-            # exit()
 
         self.register_parameter("H", torch.nn.Parameter(H))
         self.register_buffer("unrolling_alpha", torch.tensor(params["unrolling_alpha"]))

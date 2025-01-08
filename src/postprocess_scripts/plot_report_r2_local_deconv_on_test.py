@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020 Bahareh Tolooshams
+Copyright (c) 2025 Bahareh Tolooshams
 
 plot recompose data
 
@@ -10,10 +10,7 @@ import torch
 import numpy as np
 import os
 import pickle
-from tqdm import tqdm
 import argparse
-import matplotlib as mpl
-import matplotlib.pyplot as plt
 
 import sys
 

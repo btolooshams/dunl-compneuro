@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020 Bahareh Tolooshams
+Copyright (c) 2025 Bahareh Tolooshams
 
 plot code data
 
@@ -339,7 +339,7 @@ def plot_code_vs_rew_single_neuron(
         xtic = np.array([0, 10, 20])
         xtic = [int(x) for x in xtic]
         plt.xticks(xtic, xtic)
-        
+
         if kernel_ctr == 2:
             plt.xlabel("Reward amount ($\mu l$)", labelpad=0)
 

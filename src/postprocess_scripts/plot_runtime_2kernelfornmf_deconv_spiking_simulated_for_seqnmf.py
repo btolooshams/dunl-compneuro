@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020 Bahareh Tolooshams
+Copyright (c) 2025 Bahareh Tolooshams
 
 plot rec data kernel
 
@@ -29,9 +29,7 @@ def init_params():
         "--res-path-list",
         type=str,
         help="res path list",
-        default=[
-            "../results"
-        ],
+        default=["../results"],
     )
     parser.add_argument(
         "--figsize",
@@ -46,7 +44,6 @@ def init_params():
     return params
 
 
-
 def do_inference(
     dataloader_list,
     net,
@@ -54,7 +51,7 @@ def do_inference(
     code_sparse_regularization=None,
     device="cpu",
 ):
-    
+
     if "code_group_neural_firings_regularization" not in params:
         params["code_group_neural_firings_regularization"] = 0
 
@@ -110,6 +107,7 @@ def do_inference(
 
     return y_list, yhat_list
 
+
 def main():
     print("Runtime.")
 
@@ -128,17 +126,9 @@ def main():
     data_folder = "../data/local-2kernelfornmf-simulated"
 
     filename_list = os.listdir(data_folder)
-    filename_list = [
-        f"{x}" for x in filename_list if "test" in x
-    ]
-    filename_list = [
-        f"{x}" for x in filename_list if "testvis" not in x
-    ]
-    data_path_list = [
-        f"{data_folder}/{x}" for x in filename_list if ".pt" in x
-    ]
-
-    
+    filename_list = [f"{x}" for x in filename_list if "test" in x]
+    filename_list = [f"{x}" for x in filename_list if "testvis" not in x]
+    data_path_list = [f"{data_folder}/{x}" for x in filename_list if ".pt" in x]
 
     ###################################
 
@@ -166,7 +156,6 @@ def main():
     if not os.path.exists(out_path):
         os.makedirs(out_path)
 
-
     num_trials_list_global = [50, 100, 250, 500, 1000, 2000]
 
     num_steps_list_global = [250, 500, 1000]
@@ -182,16 +171,11 @@ def main():
             runtime_dict[f"num_trials{t}"] = list()
             num_trials_dict[f"num_trials{t}"] = list()
 
-        
         for res_path in res_path_list:
 
-            num_trials = int(
-                res_path.split("_")[1].split("trials")[0]
-            )
+            num_trials = int(res_path.split("_")[1].split("trials")[0])
 
-            num_steps_cur = int(
-                res_path.split("_")[5].split("steps")[0]
-            )
+            num_steps_cur = int(res_path.split("_")[5].split("steps")[0])
 
             if num_trials not in num_trials_list_global:
                 continue
@@ -215,7 +199,6 @@ def main():
             runtime_list.append(runtime_dict[f"{num_trials_key}"])
             num_trials_list.append(num_trials_dict[f"{num_trials_key}"])
 
-
         runtime_list = np.stack(runtime_list).T
         num_trials_list = np.stack(num_trials_list).T
 
@@ -227,11 +210,26 @@ def main():
     ################################
 
     outname = f"runtime_with_seqnmf.png"
-    plot_runtime_wih_nmf(runtime_list_list, num_trials_list_list, num_steps_list_global, out_path, outname)
+    plot_runtime_wih_nmf(
+        runtime_list_list,
+        num_trials_list_list,
+        num_steps_list_global,
+        out_path,
+        outname,
+    )
     outname = f"runtime_with_seqnmf.svg"
-    plot_runtime_wih_nmf(runtime_list_list, num_trials_list_list, num_steps_list_global, out_path, outname)
+    plot_runtime_wih_nmf(
+        runtime_list_list,
+        num_trials_list_list,
+        num_steps_list_global,
+        out_path,
+        outname,
+    )
 
-def plot_runtime_wih_nmf(k_list_list, num_trials_list_list, label_list, out_path, outname):
+
+def plot_runtime_wih_nmf(
+    k_list_list, num_trials_list_list, label_list, out_path, outname
+):
     axes_fontsize = 10
     legend_fontsize = 8
     tick_fontsize = 10
@@ -258,13 +256,22 @@ def plot_runtime_wih_nmf(k_list_list, num_trials_list_list, label_list, out_path
     )
 
     nmf_trials = [1, 5, 10, 25, 50, 100, 250, 500]
-    nmf_runtime =  [33.2549, 100.4099, 189.5147, 421.2873, 777.4747, 1542.8, 9500.00, 18606.00]
-    
-    nmf_runtime = [x / 60 for x in nmf_runtime] # so now in minutes
+    nmf_runtime = [
+        33.2549,
+        100.4099,
+        189.5147,
+        421.2873,
+        777.4747,
+        1542.8,
+        9500.00,
+        18606.00,
+    ]
+
+    nmf_runtime = [x / 60 for x in nmf_runtime]  # so now in minutes
 
     row = 1
     col = 1
-    fig, ax = plt.subplots(row, col, sharex=True, sharey=True, figsize=(4,3))
+    fig, ax = plt.subplots(row, col, sharex=True, sharey=True, figsize=(4, 3))
 
     ax.tick_params(axis="x", direction="out")
     ax.tick_params(axis="y", direction="out")
@@ -273,11 +280,17 @@ def plot_runtime_wih_nmf(k_list_list, num_trials_list_list, label_list, out_path
 
     plt.subplot(row, col, 1)
 
-    color_list = plt.cm.jet(np.linspace(0,1,len(num_trials_list_list)+2))
+    color_list = plt.cm.jet(np.linspace(0, 1, len(num_trials_list_list) + 2))
     for ctr in range(len(num_trials_list_list)):
         num_trials_list = num_trials_list_list[ctr]
         k_list = k_list_list[ctr]
-        ax.errorbar(np.mean(num_trials_list, axis=0), np.mean(k_list, axis=0), yerr=np.std(k_list, axis=0), color=color_list[ctr+1], label=f"DUNL {label_list[ctr]} steps")
+        ax.errorbar(
+            np.mean(num_trials_list, axis=0),
+            np.mean(k_list, axis=0),
+            yerr=np.std(k_list, axis=0),
+            color=color_list[ctr + 1],
+            label=f"DUNL {label_list[ctr]} steps",
+        )
 
     plt.plot(nmf_trials, nmf_runtime, color="gray", label=f"SeqNMF")
     plt.xscale("log")
@@ -296,13 +309,14 @@ def plot_runtime_wih_nmf(k_list_list, num_trials_list_list, label_list, out_path
     plt.xlabel("Number of Trials", labelpad=0)
 
     fig.tight_layout(pad=0.8, w_pad=0.7, h_pad=0.5)
-    
+
     plt.savefig(
         os.path.join(out_path, outname),
         bbox_inches="tight",
         pad_inches=0.02,
     )
     plt.close()
+
 
 if __name__ == "__main__":
     main()

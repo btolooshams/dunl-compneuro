@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020 Bahareh Tolooshams
+Copyright (c) 2025 Bahareh Tolooshams
 
 plot code data
 
@@ -123,7 +123,9 @@ def main():
 
     # create datasets -------------------------------------------------------#
     dataset = datasetloader.DUNLdatasetwithRasterNoRate(params["data_path"][0])
-    test_dataset = datasetloader.DUNLdatasetwithRasterNoRate(params["test_data_path"][0])
+    test_dataset = datasetloader.DUNLdatasetwithRasterNoRate(
+        params["test_data_path"][0]
+    )
 
     # create folders -------------------------------------------------------#
     model_path = os.path.join(
@@ -156,14 +158,28 @@ def main():
 
     num_neurons = dataset.raster.shape[1]
 
-
     test_x, test_xhat, test_yhat = get_xxhat(net, test_dataset, params)
 
-    plot_whisker_group_code_historgram(test_x, test_xhat, params,
-        os.path.join(out_path,"group_code_test_histrogram.svg",))
+    plot_whisker_group_code_historgram(
+        test_x,
+        test_xhat,
+        params,
+        os.path.join(
+            out_path,
+            "group_code_test_histrogram.svg",
+        ),
+    )
 
-    plot_whisker_group_code_historgram(test_x, test_xhat, params,
-        os.path.join(out_path,"group_code_test_histrogram.png",))
+    plot_whisker_group_code_historgram(
+        test_x,
+        test_xhat,
+        params,
+        os.path.join(
+            out_path,
+            "group_code_test_histrogram.png",
+        ),
+    )
+
 
 def plot_whisker_group_code_historgram(
     x,
@@ -209,7 +225,7 @@ def plot_whisker_group_code_historgram(
     a = torch.max(xhat).item()
 
     for ctr in range(10):
-        plt.subplot(row, col, ctr+1)
+        plt.subplot(row, col, ctr + 1)
 
         code = x[:, 0].detach().cpu().numpy()
         code_hat_tmp = xhat[:, ctr].detach().cpu().numpy()
@@ -230,7 +246,6 @@ def plot_whisker_group_code_historgram(
         if ctr == 0 or ctr == 5:
             plt.ylabel("Histogram", labelpad=0)
 
-
     fig.tight_layout(pad=0.8, w_pad=0.7, h_pad=0.5)
     plt.savefig(
         plot_filename,
@@ -238,7 +253,6 @@ def plot_whisker_group_code_historgram(
         pad_inches=0.02,
     )
     plt.close()
-
 
 
 def get_xxhat(net, dataset, params):
@@ -267,7 +281,7 @@ def get_xxhat(net, dataset, params):
         yhat = torch.sigmoid(hxmu)
     else:
         raise NotImplementedError("model distribution is not implemented")
-    
+
     return x, xhat.clone().detach(), torch.squeeze(yhat.clone().detach(), dim=1)
 
 

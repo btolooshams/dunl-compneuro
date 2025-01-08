@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020 Bahareh Tolooshams
+Copyright (c) 2025 Bahareh Tolooshams
 
 generated simulated data similar to dopamine spiking
 
@@ -9,11 +9,8 @@ generated simulated data similar to dopamine spiking
 import torch
 import torch.nn.functional as F
 import numpy as np
-import scipy.io as sio
 import os
 import argparse
-import matplotlib as mpl
-import matplotlib.pyplot as plt
 
 
 def init_params():
@@ -131,7 +128,6 @@ def main(params):
     )
 
     kernels = np.load(os.path.join(out_path, "kernels.npy"))
-
 
     kernels = torch.unsqueeze(torch.tensor(kernels), dim=1)
     kernels_org_resolution = torch.repeat_interleave(

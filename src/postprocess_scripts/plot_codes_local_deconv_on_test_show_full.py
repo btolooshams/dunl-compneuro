@@ -1,7 +1,7 @@
 """
-Copyright (c) 2020 Bahareh Tolooshams
+Copyright (c) 2025 Bahareh Tolooshams
 
-plot recompose data
+plot code local deconv
 
 :author: Bahareh Tolooshams
 """

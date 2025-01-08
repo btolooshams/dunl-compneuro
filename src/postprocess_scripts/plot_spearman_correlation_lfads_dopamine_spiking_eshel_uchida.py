@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020 Bahareh Tolooshams
+Copyright (c) 2025 Bahareh Tolooshams
 
 plot pca/nmf data
 
@@ -8,15 +8,10 @@ plot pca/nmf data
 
 import torch
 import numpy as np
-import scipy as sp
 from scipy import stats
 import h5py
 import os
-import pickle
-from datetime import datetime
-from tqdm import tqdm
 import argparse
-from matplotlib import cm
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA

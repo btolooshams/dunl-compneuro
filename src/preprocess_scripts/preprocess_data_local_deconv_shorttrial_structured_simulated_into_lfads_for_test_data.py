@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020 Bahareh Tolooshams
+Copyright (c) 2025 Bahareh Tolooshams
 
 preprocess data for lfads
 
@@ -8,7 +8,6 @@ preprocess data for lfads
 
 import torch
 import numpy as np
-from tqdm import tqdm
 import os
 import argparse
 import h5py

@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020 Bahareh Tolooshams
+Copyright (c) 2025 Bahareh Tolooshams
 
 plot code data
 
@@ -14,8 +14,6 @@ import pickle
 import argparse
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from sklearn.decomposition import PCA, NMF
-from sklearn.preprocessing import StandardScaler
 
 
 def init_params():

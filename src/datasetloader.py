@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020 Tolooshams
+Copyright (c) 2025 Tolooshams
 
 create data generator
 
@@ -7,9 +7,6 @@ create data generator
 """
 
 import torch
-import numpy as np
-import os
-import scipy.io as sio
 
 
 class DUNLdataset(torch.utils.data.Dataset):
@@ -59,7 +56,6 @@ class DUNLdatasetwithRasterNoRate(torch.utils.data.Dataset):
         self.a = data["a"]  # baseline dim(num_trials, num_neurons, 1)
         self.type = data["type"]  # trial type dim(num_trials)
         self.num_data = self.y.shape[0]  # number of trials
-
 
     def __len__(self):
         return self.num_data

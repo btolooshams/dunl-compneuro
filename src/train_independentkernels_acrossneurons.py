@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020 Bahareh Tolooshams
+Copyright (c) 2025 Bahareh Tolooshams
 
 train share kernel across neurons
 
@@ -97,7 +97,9 @@ def main():
     random_date = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
 
     print("WARNING! This script uses a for loop across neurons, hence not efficient.")
-    print("We suggest to write your own script and run training over neurons in parallel!")
+    print(
+        "We suggest to write your own script and run training over neurons in parallel!"
+    )
     for data_path_cur in data_path_list:
         print(data_path_cur)
 
