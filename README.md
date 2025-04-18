@@ -3,9 +3,7 @@
 
 # Deconvolutional Unrolled Neural Learning (DUNL) for Computational Neuroscience
 
-This repo is in progress.
-
-This code is wrriten for this paper [https://pmc.ncbi.nlm.nih.gov/articles/PMC10802267](https://pmc.ncbi.nlm.nih.gov/articles/PMC10802267/).
+This code is wrriten for this paper [https://www.cell.com/neuron/abstract/S0896-6273(25)00119-9](https://www.cell.com/neuron/abstract/S0896-6273(25)00119-9) published at Neuron.
 
 Learning locally low-rank temporal representation from neural time series data.
 
