@@ -3,6 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name='dunl',
     version='0.1.0',
+    packages=["src"],
     packages=find_packages(),
     install_requires=[
         'configmypy==0.1.0',
