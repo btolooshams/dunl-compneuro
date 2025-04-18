@@ -9,11 +9,8 @@ generated simulated data similar to dopamine spiking
 import torch
 import torch.nn.functional as F
 import numpy as np
-import scipy.io as sio
 import os
 import argparse
-import matplotlib as mpl
-import matplotlib.pyplot as plt
 
 
 def init_params():

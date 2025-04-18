@@ -14,7 +14,7 @@ import h5py
 
 import sys
 
-sys.path.append("../src/")
+sys.path.append("../dunl/")
 
 import datasetloader
 

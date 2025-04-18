@@ -8,7 +8,6 @@ learn pca nmf
 
 import torch
 import numpy as np
-import scipy as sp
 import os
 import pickle
 import argparse
