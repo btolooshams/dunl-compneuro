@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name='dunl',
     version='0.1.0',
-    packages=['src'],
+    packages=['dunl'],
     install_requires=[
         'configmypy',
         'h5py',
