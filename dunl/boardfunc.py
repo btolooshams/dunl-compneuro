@@ -5,7 +5,6 @@ functions to send info to borad during training
 
 :author: Bahareh Tolooshams
 """
-import io
 import numpy as np
 import torch
 from tqdm import tqdm
