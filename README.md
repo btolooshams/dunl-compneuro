@@ -7,6 +7,12 @@ This code is wrriten for this paper [https://www.cell.com/neuron/abstract/S0896-
 
 Learning locally low-rank temporal representation from neural time series data.
 
+### Usage
+
+For clone: `git clone https://github.com/btolooshams/dunl-compneuro.git`
+
+For pip install: `pip install git+https://github.com/btolooshams/dunl-compneuro.git`
+
 ### PATH
 
 For any scripts to run, make sure you are in `dunl` directory.
